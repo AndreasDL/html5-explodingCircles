@@ -5,7 +5,7 @@
 
 	</head>
 	<body>
-		<canvas id="canvas" width="1000" height="800" style="border:1px solid #000000;">
+		<canvas id="canvas" width="600" height="600" style="border:1px solid #000000;">
 		</canvas>
 
 		<script>
@@ -29,9 +29,17 @@
 			// Basic Funcions
 			//--------------------------------------------------------
 			//draw circles
-			var drawCircle = function(x,y,r){
+			var drawCircle = function(circle){
+				ctx.fillStyle = circle.color;
+				
 				ctx.beginPath();
-				ctx.arc(x,y,r, 0, Math.PI*2);
+
+				ctx.arc(circle.x,
+					circle.y,
+					circle.r, 
+					0, Math.PI*2
+				);
+				
 				ctx.closePath();
 				ctx.fill();
 			};
@@ -65,18 +73,21 @@
 					}
 
 					//store
-					circles_alive.push({
+					circle = {
 						'x' : x ,
 						'y' : y ,
 						'dx': dx,
 						'dy': dy,
 						'r' : RADIUS,
 						'health': START_HEALTH,
+						'color' : getRandomColor(),
 						'score' : 100
-					});
+					};
+					
+					circles_alive.push(circle);
 
 					//draw
-					drawCircle(x,y,RADIUS);
+					drawCircle(circle);
 				}
 			}
 
@@ -115,7 +126,7 @@
 					}
 
 					//draw
-					drawCircle(circle.x,circle.y,circle.r);
+					drawCircle(circle);
 				}
 			}
 
@@ -131,16 +142,12 @@
 							death_circle.r += 2;
 						}
 
-						drawCircle(
-							death_circle.x,
-							death_circle.y,
-							death_circle.r
-						);
+						drawCircle(death_circle);
 					}
 				}
 			}
 			
-			//check for collisions
+			//check for collisions & update health stuffz
 			var checkCollisions = function(){
 				if (circles_death){
 					
@@ -195,19 +202,17 @@
 					}
 				}
 			}
-			
-			//Event listener
-			canvas.addEventListener('click', function(){
-				if (!circles_death){
-					//get x, y of click event
-					var x = event.pageX - canvas.offsetLeft;
-					var y = event.pageY - canvas.offsetTop;
 
-					drawCircle(x,y,10);
-
-					circles_death = [{ 'x': x, 'y': y, 'r': 10, 'health': START_HEALTH}];
-				}
-			}, false);
+			//returns a random hex color
+			function getRandomColor() {
+				//stolen with pride from http://stackoverflow.com/questions/1484506/random-color-generator-in-javascript
+			    var letters = '0123456789ABCDEF'.split('');
+			    var color = '#';
+			    for (var i = 0; i < 6; i++ ) {
+			        color += letters[Math.floor(Math.random() * 16)];
+			    }
+			    return color;
+			}
 
 
 			// Start game
@@ -218,6 +223,27 @@
 				explodeCircles();
 				checkCollisions();
 			},30);
+
+			// Event listener
+			//--------------------------------------------------------
+			canvas.addEventListener('click', function(){
+				if (!circles_death){
+					circle = {
+						'x' : event.pageX - canvas.offsetLeft, //correct for canvas offset
+						'y' : event.pageY - canvas.offsetTop, 
+						'dx': 0,
+						'dy': 0,
+						'r' : 10, 
+						'health': START_HEALTH,
+						'color' : "#000000",
+						'score' : 100
+					};
+
+					drawCircle(circle);
+
+					circles_death = [circle];
+				}
+			}, false);
 
 			
 		</script>
