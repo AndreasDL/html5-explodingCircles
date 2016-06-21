@@ -5,6 +5,7 @@
 
 	</head>
 	<body>
+
 		<canvas id="canvas" width="600" height="600" style="border:1px solid #000000;">
 		</canvas>
 
@@ -17,11 +18,10 @@
 			var START_HEALTH = 150;
 			var INIT_COUNT = 17;
 
-			//associate with canvas
+			// associate html elements
 			var canvas = document.getElementById('canvas');
 			var ctx = canvas.getContext('2d');
 
-			
 			var circles_alive = []; //store drawn circles
 			var circles_death = null;
 			var score = 0;
@@ -43,6 +43,17 @@
 				ctx.closePath();
 				ctx.fill();
 			};
+
+			//returns a random hex color
+			function getRandomColor() {
+				//stolen with pride from http://stackoverflow.com/questions/1484506/random-color-generator-in-javascript
+			    var letters = '0123456789ABCDEF'.split('');
+			    var color = '#';
+			    for (var i = 0; i < 6; i++ ) {
+			        color += letters[Math.floor(Math.random() * 16)];
+			    }
+			    return color;
+			}
 
 			//place initcount random circles on the field			
 			var initCircles = function(initCount){
@@ -92,7 +103,7 @@
 			}
 
 			//move the circle across the canvas
-			var moveCircles = function(){
+			var drawAliveCircles = function(){
 				//clear board
 				ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -131,7 +142,7 @@
 			}
 
 			//r+= 2 when exploding
-			var explodeCircles = function(){
+			var drawDeathCircles = function(){
 				if (circles_death){
 
 					for (i = 0; i < circles_death.length; i++){
@@ -173,12 +184,18 @@
 									(death_circle.y - alive_circle.y)
 							);
 
-							if ( dist < alive_circle.r || dist < death_circle.r){ //collision
-								//Start explosion
+							if ( dist <= alive_circle.r + death_circle.r){ //collision
+								
 								alive_circle.r += 2;
+								alive_circle.score = death_circle.score * 2;
+								
+								score += alive_circle.score;
 
+								//move to other array
 								circles_death.push(alive_circle);
 								circles_alive.splice(j,1); //remove
+
+								console.log(score);
 
 							} else {
 								j++; //only increase j if no items are removed !
@@ -203,24 +220,14 @@
 				}
 			}
 
-			//returns a random hex color
-			function getRandomColor() {
-				//stolen with pride from http://stackoverflow.com/questions/1484506/random-color-generator-in-javascript
-			    var letters = '0123456789ABCDEF'.split('');
-			    var color = '#';
-			    for (var i = 0; i < 6; i++ ) {
-			        color += letters[Math.floor(Math.random() * 16)];
-			    }
-			    return color;
-			}
 
 
 			// Start game
 			//--------------------------------------------------------
 			initCircles(INIT_COUNT);
 			window.setInterval(function(){
-				moveCircles();
-				explodeCircles();
+				drawAliveCircles();
+				drawDeathCircles();
 				checkCollisions();
 			},30);
 
@@ -242,10 +249,17 @@
 					drawCircle(circle);
 
 					circles_death = [circle];
-				}
-			}, false);
 
-			
+					score += circle.score;
+					console.log(score);
+				}
+				/*
+				drawAliveCircles();
+				drawDeathCircles();
+				checkCollisions();
+				*/
+
+			}, false);
 		</script>
 	</body>
 </html>
