@@ -6,21 +6,23 @@
 	</head>
 	<body>
 
-		<canvas id="canvas" width="600" height="600" style="border:1px solid #000000;">
+		<canvas id="canvas" width="1900" height="800" style="border:1px solid #000000;">
 		</canvas>
 
 		<script>
 			// Variables
 			//--------------------------------------------------------
 			var RADIUS = 20; //radius of the circles
-			var MAX_SPEED = 10;//max dx or dy of a circle
+			var MAX_SPEED = 30;//max dx or dy of a circle
 			var MAX_EXPLO_SIZE = 40; //explosion go untill this size
 			var START_HEALTH = 150;
-			var INIT_COUNT = 17;
+			var INIT_COUNT = 37;
 
 			// associate html elements
 			var canvas = document.getElementById('canvas');
 			var ctx = canvas.getContext('2d');
+			
+			var timer = null;
 
 			var circles_alive = []; //store drawn circles
 			var circles_death = null;
@@ -29,7 +31,7 @@
 			// Basic Funcions
 			//--------------------------------------------------------
 			//draw circles
-			var drawCircle = function(circle){
+			function drawCircle(circle){
 				ctx.fillStyle = circle.color;
 				
 				ctx.beginPath();
@@ -55,8 +57,15 @@
 			    return color;
 			}
 
+			//clear board
+			function clearBoard(){
+				//clear board
+				ctx.clearRect(0,0,canvas.width,canvas.height);
+			}
+
+
 			//place initcount random circles on the field			
-			var initCircles = function(initCount){
+			function initCircles(initCount){
 				for (i = 0; i < initCount; i++){
 
 					//location
@@ -103,10 +112,7 @@
 			}
 
 			//move the circle across the canvas
-			var drawAliveCircles = function(){
-				//clear board
-				ctx.clearRect(0,0,canvas.width,canvas.height);
-
+			function drawAliveCircles(){
 				//re-add circles at new position
 				for (i = 0; i < circles_alive.length; i++){
 					circle = circles_alive[i];
@@ -142,7 +148,7 @@
 			}
 
 			//r+= 2 when exploding
-			var drawDeathCircles = function(){
+			function drawDeathCircles(){
 				if (circles_death){
 
 					for (i = 0; i < circles_death.length; i++){
@@ -159,7 +165,7 @@
 			}
 			
 			//check for collisions & update health stuffz
-			var checkCollisions = function(){
+			function checkCollisions(){
 				if (circles_death){
 					
 					var i = 0;
@@ -220,24 +226,25 @@
 				}
 			}
 
+			//place first explosion
+			function placeExplosion(event){
+				var x;
+				var y;
+				if (event.pageX || event.pageY) { 
+				  x = event.pageX;
+				  y = event.pageY;
+				}
+				else { 
+				  x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+				  y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+				} 
+				x -= canvas.offsetLeft;
+				y -= canvas.offsetTop;
 
-
-			// Start game
-			//--------------------------------------------------------
-			initCircles(INIT_COUNT);
-			window.setInterval(function(){
-				drawAliveCircles();
-				drawDeathCircles();
-				checkCollisions();
-			},30);
-
-			// Event listener
-			//--------------------------------------------------------
-			canvas.addEventListener('click', function(){
 				if (!circles_death){
 					circle = {
-						'x' : event.pageX - canvas.offsetLeft, //correct for canvas offset
-						'y' : event.pageY - canvas.offsetTop, 
+						'x' : x,
+						'y' : y,
 						'dx': 0,
 						'dy': 0,
 						'r' : 10, 
@@ -253,13 +260,68 @@
 					score += circle.score;
 					console.log(score);
 				}
-				/*
+			}
+
+			//put this in timer loop to run game
+			function runGame(){
+				clearBoard();
+
 				drawAliveCircles();
 				drawDeathCircles();
+				
 				checkCollisions();
-				*/
 
-			}, false);
+				checkGameOver();
+			}
+
+			// (re)-start game
+			function startGame(){
+				//reset game
+				circles_death = null;
+				score = 100;
+
+				clearBoard();
+				initCircles(INIT_COUNT);
+				
+				canvas.removeEventListener('click',resetGame);
+				canvas.addEventListener('click', placeExplosion, false);
+
+				timer = window.setInterval(runGame,30);
+			}
+
+			//check if game has ended
+			function checkGameOver(){
+				var gameComplete = false;
+
+				if (circles_alive.length == 0){
+					//Won
+					ctx.font = "30px Arial";
+					ctx.fillText("Won",50,50);
+
+					console.log("won");
+					gameComplete = true;
+				} else if ( circles_death && circles_death.length == 0 ){
+					// lost
+					ctx.font = "30px Arial";
+					ctx.fillText("Lost",50,50);
+
+					console.log("lost");	
+					gameComplete = true;
+				} 
+
+
+				//game completed => reset stuffz
+				if (gameComplete){
+					clearInterval(timer);
+
+					canvas.removeEventListener('click', placeExplosion);
+					canvas.addEventListener('click', resetGame, false);
+				}
+			}
+
+			// Start game
+			startGame();
+			
 		</script>
 	</body>
 </html>
