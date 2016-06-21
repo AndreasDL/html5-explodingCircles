@@ -5,7 +5,7 @@
 
 	</head>
 	<body>
-		<canvas id="canvas" width="800" height="600" style="border:1px solid #000000;">
+		<canvas id="canvas" width="1000" height="800" style="border:1px solid #000000;">
 		</canvas>
 
 		<script>
@@ -24,6 +24,7 @@
 			
 			var circles_alive = []; //store drawn circles
 			var circles_death = null;
+			var score = 0;
 
 			// Basic Funcions
 			//--------------------------------------------------------
@@ -70,7 +71,8 @@
 						'dx': dx,
 						'dy': dy,
 						'r' : RADIUS,
-						'health': START_HEALTH
+						'health': START_HEALTH,
+						'score' : 100
 					});
 
 					//draw
@@ -79,9 +81,8 @@
 			}
 
 			//move the circle across the canvas
-			//let the placed circle explore
-			var updateCanvas = function(){
-				//clear
+			var moveCircles = function(){
+				//clear board
 				ctx.clearRect(0,0,canvas.width,canvas.height);
 
 				//re-add circles at new position
@@ -116,12 +117,14 @@
 					//draw
 					drawCircle(circle.x,circle.y,circle.r);
 				}
+			}
 
+			//r+= 2 when exploding
+			var explodeCircles = function(){
 				if (circles_death){
-					var i = 0
-					while (i < circles_death.length){
 
-						//re-draw
+					for (i = 0; i < circles_death.length; i++){
+
 						death_circle = circles_death[i];
 
 						if (death_circle.r < MAX_EXPLO_SIZE && death_circle.health > 0){
@@ -133,8 +136,18 @@
 							death_circle.y,
 							death_circle.r
 						);
+					}
+				}
+			}
+			
+			//check for collisions
+			var checkCollisions = function(){
+				if (circles_death){
+					
+					var i = 0;
+					while (i < circles_death.length){
+						death_circle = circles_death[i];
 
-						//check for collisions
 						var j = 0;
 						while ( j < circles_alive.length){
 						
@@ -153,48 +166,36 @@
 									(death_circle.y - alive_circle.y)
 							);
 
-							if ( dist < max(alive_circle.r, death_circle.r)){
-
+							if ( dist < alive_circle.r || dist < death_circle.r){ //collision
 								//Start explosion
 								alive_circle.r += 2;
 
 								circles_death.push(alive_circle);
 								circles_alive.splice(j,1); //remove
 
-							}else{
+							} else {
 								j++; //only increase j if no items are removed !
 							}
 						}
 
-						var removed = false;
-						console.log(circles_death[i].health, ' - ', circles_death[i].r);
 
-						if (death_circle.health > 0){
-							
-							death_circle.health -= 4;	
-
-						} else {	
-							console.log("hoi");
+						if (death_circle.health > 0){							
+							death_circle.health -= 2;	
+						} else {
 							death_circle.r--;
-
-							if (death_circle.r <= RADIUS){
-								circles_death.splice(i,1);
-								removed = true;
-							}
-
 						}
 
-						if (!removed){
+						if (death_circle.r <= 0 && death_circle.health <= 0){
+							//remove
+							circles_death.splice(i,1);
+						} else {
+							//move when nothing is removed from array
 							i++;
 						}
 					}
 				}
 			}
-
-			var max = function(x,y){
-				return x > y ? x : y;
-			}
-
+			
 			//Event listener
 			canvas.addEventListener('click', function(){
 				if (!circles_death){
@@ -206,15 +207,17 @@
 
 					circles_death = [{ 'x': x, 'y': y, 'r': 10, 'health': START_HEALTH}];
 				}
-				
-
 			}, false);
 
 
 			// Start game
 			//--------------------------------------------------------
 			initCircles(INIT_COUNT);
-			window.setInterval(updateCanvas,30);
+			window.setInterval(function(){
+				moveCircles();
+				explodeCircles();
+				checkCollisions();
+			},30);
 
 			
 		</script>
