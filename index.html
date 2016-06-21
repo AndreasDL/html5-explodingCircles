@@ -283,7 +283,7 @@
 				clearBoard();
 				initCircles(INIT_COUNT);
 				
-				canvas.removeEventListener('click',resetGame);
+				canvas.removeEventListener('click',startGame);
 				canvas.addEventListener('click', placeExplosion, false);
 
 				timer = window.setInterval(runGame,30);
