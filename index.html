@@ -1,0 +1,222 @@
+<html>
+	<head>
+		<title>TBD</title>
+
+
+	</head>
+	<body>
+		<canvas id="canvas" width="800" height="600" style="border:1px solid #000000;">
+		</canvas>
+
+		<script>
+			// Variables
+			//--------------------------------------------------------
+			var RADIUS = 20; //radius of the circles
+			var MAX_SPEED = 10;//max dx or dy of a circle
+			var MAX_EXPLO_SIZE = 40; //explosion go untill this size
+			var START_HEALTH = 150;
+			var INIT_COUNT = 17;
+
+			//associate with canvas
+			var canvas = document.getElementById('canvas');
+			var ctx = canvas.getContext('2d');
+
+			
+			var circles_alive = []; //store drawn circles
+			var circles_death = null;
+
+			// Basic Funcions
+			//--------------------------------------------------------
+			//draw circles
+			var drawCircle = function(x,y,r){
+				ctx.beginPath();
+				ctx.arc(x,y,r, 0, Math.PI*2);
+				ctx.closePath();
+				ctx.fill();
+			};
+
+			//place initcount random circles on the field			
+			var initCircles = function(initCount){
+				for (i = 0; i < initCount; i++){
+
+					//location
+					var x = Math.round(
+						RADIUS + 
+						(
+							Math.random() * 
+							(canvas.width - 2*RADIUS)
+						)
+					);
+					var y = Math.round(
+						RADIUS + 
+						(
+							Math.random() * 
+							(canvas.height - 2*RADIUS)
+						)
+					);
+
+					//speeds
+					var dx = 0;
+					var dy = 0;
+					while (dx == 0 || dy == 0){
+						dx = Math.round(Math.random() * MAX_SPEED * 2) - MAX_SPEED;
+						dy = Math.round(Math.random() * MAX_SPEED * 2) - MAX_SPEED;
+					}
+
+					//store
+					circles_alive.push({
+						'x' : x ,
+						'y' : y ,
+						'dx': dx,
+						'dy': dy,
+						'r' : RADIUS,
+						'health': START_HEALTH
+					});
+
+					//draw
+					drawCircle(x,y,RADIUS);
+				}
+			}
+
+			//move the circle across the canvas
+			//let the placed circle explore
+			var updateCanvas = function(){
+				//clear
+				ctx.clearRect(0,0,canvas.width,canvas.height);
+
+				//re-add circles at new position
+				for (i = 0; i < circles_alive.length; i++){
+					circle = circles_alive[i];
+
+					//referenced => new x & y are auto-saved in array :D
+					circle.x = circle.x + circle.dx;
+					circle.y = circle.y + circle.dy;
+					
+					//outside canvas?
+					// fix x;y coordinates & change direction
+					if (circle.x <= circle.r){
+						circle.x = circle.r - (circle.x - circle.r);
+						circle.dx = - circle.dx;
+
+					} else if (circle.x + circle.r >= canvas.width){
+						circle.x  = circle.x - (circle.x + circle.r - canvas.width);
+						circle.dx = - circle.dx;
+
+					}
+
+					if (circle.y <= circle.r){
+						circle.y = circle.r - (circle.y - circle.r);
+						circle.dy = - circle.dy;
+
+					} else if (circle.y + circle.r >= canvas.height){
+						circle.y  = circle.y - (circle.y + circle.r - canvas.height);
+						circle.dy = - circle.dy;
+					}
+
+					//draw
+					drawCircle(circle.x,circle.y,circle.r);
+				}
+
+				if (circles_death){
+					var i = 0
+					while (i < circles_death.length){
+
+						//re-draw
+						death_circle = circles_death[i];
+
+						if (death_circle.r < MAX_EXPLO_SIZE && death_circle.health > 0){
+							death_circle.r += 2;
+						}
+
+						drawCircle(
+							death_circle.x,
+							death_circle.y,
+							death_circle.r
+						);
+
+						//check for collisions
+						var j = 0;
+						while ( j < circles_alive.length){
+						
+							alive_circle = circles_alive[j];
+						
+							//distance between circles
+							var dist = Math.sqrt(
+									(death_circle.x - alive_circle.x) 
+									* 
+									(death_circle.x - alive_circle.x)
+									
+								+
+								
+									(death_circle.y - alive_circle.y) 
+									* 
+									(death_circle.y - alive_circle.y)
+							);
+
+							if ( dist < max(alive_circle.r, death_circle.r)){
+
+								//Start explosion
+								alive_circle.r += 2;
+
+								circles_death.push(alive_circle);
+								circles_alive.splice(j,1); //remove
+
+							}else{
+								j++; //only increase j if no items are removed !
+							}
+						}
+
+						var removed = false;
+						console.log(circles_death[i].health, ' - ', circles_death[i].r);
+
+						if (death_circle.health > 0){
+							
+							death_circle.health -= 4;	
+
+						} else {	
+							console.log("hoi");
+							death_circle.r--;
+
+							if (death_circle.r <= RADIUS){
+								circles_death.splice(i,1);
+								removed = true;
+							}
+
+						}
+
+						if (!removed){
+							i++;
+						}
+					}
+				}
+			}
+
+			var max = function(x,y){
+				return x > y ? x : y;
+			}
+
+			//Event listener
+			canvas.addEventListener('click', function(){
+				if (!circles_death){
+					//get x, y of click event
+					var x = event.pageX - canvas.offsetLeft;
+					var y = event.pageY - canvas.offsetTop;
+
+					drawCircle(x,y,10);
+
+					circles_death = [{ 'x': x, 'y': y, 'r': 10, 'health': START_HEALTH}];
+				}
+				
+
+			}, false);
+
+
+			// Start game
+			//--------------------------------------------------------
+			initCircles(INIT_COUNT);
+			window.setInterval(updateCanvas,30);
+
+			
+		</script>
+	</body>
+</html>
