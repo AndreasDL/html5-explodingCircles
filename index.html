@@ -6,13 +6,20 @@
 	</head>
 	<body>
 
-		<canvas id="canvas" width="1900" height="800" style="border:1px solid #000000;">
+		<canvas id="canvas" width="1900" height="800" style="border:2px solid #000000;">
 		</canvas>
+		</br>
+		</br>
+		
+		<span style="float:right" id='curr_score'>Score: 0</span>
+		<span style="float:right" >&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> <!-- TODO padding -->
+		<span style="float:right" id='best_score'>Best: 0</span>
 
 		<script>
 			// Variables
 			//--------------------------------------------------------
 			var RADIUS = 20; //radius of the circles
+			var MIN_SPEED = 5; //min dx or dy of a circle
 			var MAX_SPEED = 30;//max dx or dy of a circle
 			var MAX_EXPLO_SIZE = 40; //explosion go untill this size
 			var START_HEALTH = 150;
@@ -22,11 +29,15 @@
 			var canvas = document.getElementById('canvas');
 			var ctx = canvas.getContext('2d');
 			
+			var curr_score_field = document.getElementById("curr_score");
+			var best_score_field = document.getElementById("best_score");
+			
 			var timer = null;
 
 			var circles_alive = []; //store drawn circles
 			var circles_death = null;
 			var score = 0;
+			var best_score = 0;
 
 			// Basic Funcions
 			//--------------------------------------------------------
@@ -63,7 +74,6 @@
 				ctx.clearRect(0,0,canvas.width,canvas.height);
 			}
 
-
 			//place initcount random circles on the field			
 			function initCircles(initCount){
 				for (i = 0; i < initCount; i++){
@@ -85,11 +95,16 @@
 					);
 
 					//speeds
-					var dx = 0;
-					var dy = 0;
-					while (dx == 0 || dy == 0){
-						dx = Math.round(Math.random() * MAX_SPEED * 2) - MAX_SPEED;
-						dy = Math.round(Math.random() * MAX_SPEED * 2) - MAX_SPEED;
+					var speed = MAX_SPEED - MIN_SPEED;
+					var dx = MIN_SPEED + Math.round(Math.random() * speed);
+					var dy = MIN_SPEED + Math.round(Math.random() * speed);
+
+					//speed can also be negative
+					if (Math.round(Math.random())){
+						dx = -dx;
+					}
+					if (Math.round(Math.random())){
+						dy = -dy;
 					}
 
 					//store
@@ -196,13 +211,11 @@
 								alive_circle.score = death_circle.score * 2;
 								
 								score += alive_circle.score;
+								setScore(score);
 
 								//move to other array
 								circles_death.push(alive_circle);
 								circles_alive.splice(j,1); //remove
-
-								console.log(score);
-
 							} else {
 								j++; //only increase j if no items are removed !
 							}
@@ -258,7 +271,22 @@
 					circles_death = [circle];
 
 					score += circle.score;
-					console.log(score);
+					setScore(score);
+				}
+			}
+
+			//put score value in the span
+			function setScore(score){
+				text = document.createTextNode('Score: '+ score);
+				curr_score_field.innerHTML = ''; // clear existing
+				curr_score_field.appendChild(text);
+
+				//replace the current best score with score, if it's value is higher
+				if (score > best_score){
+					best_score = score;
+					text = document.createTextNode('Best: '+ best_score);
+					best_score_field.innerHTML = ''; // clear existing
+					best_score_field.appendChild(text);
 				}
 			}
 
@@ -291,27 +319,34 @@
 
 			//check if game has ended
 			function checkGameOver(){
-				var gameComplete = false;
+				var text = '';
 
 				if (circles_alive.length == 0){
 					//Won
-					ctx.font = "30px Arial";
-					ctx.fillText("Won",50,50);
-
-					console.log("won");
-					gameComplete = true;
+					text = "Won!";
 				} else if ( circles_death && circles_death.length == 0 ){
 					// lost
-					ctx.font = "30px Arial";
-					ctx.fillText("Lost",50,50);
-
-					console.log("lost");	
-					gameComplete = true;
-				} 
+					text = 'Lost!';
+				}
 
 
 				//game completed => reset stuffz
-				if (gameComplete){
+				if (text != ''){
+					ctx.fillStyle = '#000000';
+					ctx.font = "150px Arial";
+
+					text += ' ' + score;
+					ctx.fillText(
+						text,
+						canvas.offsetLeft + (canvas.width  - ctx.measureText(text).width )/2,
+						canvas.offsetTop  + (canvas.height + ctx.measureText('M' ).width )/2 
+						//estimate height of text, since the height is not included in the canvas for some obvious reason that I don't get.
+						//idea stolen with pride from http://stackoverflow.com/questions/1134586/how-can-you-find-the-height-of-text-on-an-html-canvas
+					);
+
+					console.log(text);
+					
+
 					clearInterval(timer);
 
 					canvas.removeEventListener('click', placeExplosion);
