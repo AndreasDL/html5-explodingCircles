@@ -4,17 +4,36 @@
 
 
 	</head>
-	<body>
+	<body bgcolor="#0a0a0f">
+		<span id='curr_score'>Score: 0</span>
+		<span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> <!-- TODO padding -->
+		<span id='best_score'>Best: 0</span>
 
-		<canvas id="canvas" width="1900" height="800" style="border:2px solid #000000;">
-		</canvas>
 		</br>
 		</br>
 		
-		<span style="float:right" id='curr_score'>Score: 0</span>
-		<span style="float:right" >&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> <!-- TODO padding -->
-		<span style="float:right" id='best_score'>Best: 0</span>
+		<canvas id="canvas" width="800" height="800">
+		</canvas>
+		
+		<!-- styling -->
+		<style>
+			#canvas { 
+				border-radius: 19px; 
+				border: 10px solid #ffffff;
+			    padding: 0;
+			    margin: auto;
+			    display: block;
+			}
 
+			span {
+				float: right;
+				color: #ffffff;
+				font: 35px bold;
+				font-family: 'Comic Sans MS', cursive, sans-serif;
+			}
+		</style>
+
+		<!-- scripting -->
 		<script>
 			// Variables
 			//--------------------------------------------------------
@@ -63,8 +82,16 @@
 			    var letters = '0123456789ABCDEF'.split('');
 			    var color = '#';
 			    for (var i = 0; i < 6; i++ ) {
-			        color += letters[Math.floor(Math.random() * 16)];
+			        color += letters[Math.floor(Math.random() * letters.length)];
 			    }
+
+			    while (color == '#0a0a0f' || color == '#000000'){
+				    color = '#';
+				    for (var i = 0; i < 6; i++ ) {
+				        color += letters[Math.floor(Math.random() * letters.length)];
+				    }			    	
+			    }
+
 			    return color;
 			}
 
@@ -262,7 +289,7 @@
 						'dy': 0,
 						'r' : 10, 
 						'health': START_HEALTH,
-						'color' : "#000000",
+						'color' : "#ffffff",
 						'score' : 100
 					};
 
@@ -332,20 +359,18 @@
 
 				//game completed => reset stuffz
 				if (text != ''){
-					ctx.fillStyle = '#000000';
-					ctx.font = "150px Arial";
+					ctx.fillStyle = '#ffffff';
+					ctx.font = "110px Comic Sans MS";
 
 					text += ' ' + score;
 					ctx.fillText(
 						text,
-						canvas.offsetLeft + (canvas.width  - ctx.measureText(text).width )/2,
-						canvas.offsetTop  + (canvas.height + ctx.measureText('M' ).width )/2 
+						(canvas.width  - ctx.measureText(text).width   )/2,
+						(canvas.height + ctx.measureText('M' ).width/2 )/2 
 						//estimate height of text, since the height is not included in the canvas for some obvious reason that I don't get.
 						//idea stolen with pride from http://stackoverflow.com/questions/1134586/how-can-you-find-the-height-of-text-on-an-html-canvas
 					);
-
-					console.log(text);
-					
+				
 
 					clearInterval(timer);
 
