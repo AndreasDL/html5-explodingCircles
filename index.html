@@ -5,15 +5,16 @@
 
 	</head>
 	<body bgcolor="#0a0a0f">
-		<span id='curr_score'>Score: 0</span>
-		<span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> <!-- TODO padding -->
-		<span id='best_score'>Best: 0</span>
+		<div style='text-align: center;'>
+			<span id='curr_score' style="display: inline-block;">Score: 0</span>
+			<!--span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> <!- TODO padding -->
+			<span id='best_score' style="display:inline-block;">Best: 0</span>	
+		</div>
 
-		</br>
 		</br>
 		
 		<canvas id="canvas" width="800" height="800">
-		</canvas>
+		</canvas>		
 		
 		<!-- styling -->
 		<style>
@@ -26,10 +27,10 @@
 			}
 
 			span {
-				float: right;
 				color: #ffffff;
 				font: 35px bold;
 				font-family: 'Comic Sans MS', cursive, sans-serif;
+				margin: 20 10 10 0;
 			}
 		</style>
 
@@ -360,7 +361,7 @@
 				//game completed => reset stuffz
 				if (text != ''){
 					ctx.fillStyle = '#ffffff';
-					ctx.font = "110px Comic Sans MS";
+					ctx.font = "90px Comic Sans MS";
 
 					text += ' ' + score;
 					ctx.fillText(
